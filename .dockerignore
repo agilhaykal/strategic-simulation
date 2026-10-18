@@ -1,0 +1,5 @@
+.git
+.venv
+.data
+web/node_modules
+web/.next

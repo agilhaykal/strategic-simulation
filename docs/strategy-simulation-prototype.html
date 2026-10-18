@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>Simulation — Decision Intelligence</title>
+<style>
+:root{
+  --bg:#06111f;
+  --bg2:#091827;
+  --panel:rgba(139,205,255,.09);
+  --panel-2:rgba(255,255,255,.06);
+  --line:rgba(160,226,255,.16);
+  --line-strong:rgba(182,233,255,.35);
+  --text:#ecf7ff;
+  --muted:#95b7cd;
+  --soft:#beddf1;
+  --blue:#87dcff;
+  --blue-2:#57bfff;
+  --glow:0 0 0 1px rgba(170,233,255,.15),0 20px 80px rgba(20,119,179,.16), inset 0 1px 0 rgba(255,255,255,.08);
+  --shadow:0 18px 55px rgba(0,0,0,.35);
+  --radius:26px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:radial-gradient(circle at 20% 20%, rgba(72,157,219,.18), transparent 32%),radial-gradient(circle at 80% 10%, rgba(128,234,255,.10), transparent 26%),linear-gradient(180deg,#07121f 0%, #071522 50%, #06111c 100%);color:var(--text);overflow-x:hidden}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer;border-radius:16px}
+a{text-decoration:none;color:inherit}
+.hidden{display:none !important}
+.glass{background:linear-gradient(180deg, rgba(151,213,255,.08), rgba(255,255,255,.03));backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:var(--glow);border-radius:var(--radius)}
+.app{min-height:100vh;position:relative}
+.noise,.grid{position:fixed;inset:0;pointer-events:none;z-index:0}
+.noise{opacity:.08;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.7) 1px, transparent 0);background-size:18px 18px;mask-image:radial-gradient(circle at 50% 50%, #000 40%, transparent 95%)}
+.grid{background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:42px 42px;mask-image:linear-gradient(180deg, rgba(0,0,0,.7), transparent 90%)}
+.header{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;background:linear-gradient(180deg, rgba(5,12,22,.9), rgba(5,12,22,.48));backdrop-filter:blur(22px);border-bottom:1px solid rgba(146,217,255,.08)}
+.brand{display:flex;align-items:center;gap:14px;font-weight:700;letter-spacing:.02em}
+.brand-mark{width:38px;height:38px;border-radius:14px;background:radial-gradient(circle at 30% 30%, #b3efff, #57c5ff 64%, #2788cb);box-shadow:0 0 22px rgba(92,201,255,.45), inset 0 1px 0 rgba(255,255,255,.75);display:grid;place-items:center;color:#062138;font-size:18px;font-weight:900}
+.brand-copy small{display:block;color:var(--muted);font-size:10px;letter-spacing:.22em;text-transform:uppercase;margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px}
+.pill, .ghost-btn, .cta, .segmented button, .chip{border-radius:999px;border:1px solid var(--line)}
+.pill{padding:10px 14px;background:rgba(255,255,255,.03);color:var(--soft);font-size:12px}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav button{background:transparent;border:1px solid transparent;color:var(--muted);padding:10px 14px;border-radius:999px;font-weight:600;transition:.2s}
+.nav button.active,.nav button:hover{background:rgba(255,255,255,.06);border-color:var(--line);color:var(--text)}
+.page{position:relative;z-index:1;padding:28px clamp(18px,3.5vw,44px) 42px;max-width:1460px;margin:0 auto}
+.hero-wrap{min-height:calc(100vh - 92px);display:grid;place-items:center;position:relative;padding:20px 0 80px}
+.orbit-scene{position:absolute;inset:0;display:grid;place-items:center;pointer-events:auto}
+#orbitCanvas{width:min(92vw,920px);height:min(74vw,680px);max-height:78vh;opacity:.98;filter:drop-shadow(0 0 24px rgba(110,210,255,.13))}
+.hero-card{position:relative;z-index:2;width:min(860px,92vw);padding:30px 24px 22px;text-align:center;background:linear-gradient(180deg, rgba(9,29,46,.28), rgba(17,34,51,.18));backdrop-filter:blur(10px);border-radius:34px}
+.micro{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid rgba(146,217,255,.16);background:rgba(255,255,255,.03);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b9dcf1}
+.micro:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--blue);box-shadow:0 0 14px rgba(135,220,255,.95)}
+.headline{margin:20px auto 14px;max-width:900px;font-size:clamp(38px,7vw,84px);line-height:.94;font-weight:790;letter-spacing:-.05em}
+.sub{margin:0 auto 24px;max-width:580px;color:var(--muted);font-size:15px;line-height:1.7}
+.prompt-box{width:min(760px,100%);margin:0 auto;padding:12px;border-radius:28px;background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.035));border:1px solid rgba(173,231,255,.18);box-shadow:0 16px 70px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.1)}
+.prompt-box textarea{width:100%;background:transparent;border:0;outline:0;color:var(--text);resize:none;min-height:88px;padding:14px 16px 10px;font-size:18px;line-height:1.45}
+.prompt-box textarea::placeholder{color:#8cadc0}
+.prompt-actions{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:0 8px 8px}
+.helper{font-size:12px;color:var(--muted);text-align:left;padding-left:8px}
+.ghost-btn,.cta,.source-card button,.link-btn,.toolbar-btn{background:rgba(255,255,255,.05);color:var(--text);padding:12px 16px;border:1px solid var(--line);box-shadow:var(--glow);font-weight:650;transition:.22s}
+.cta{background:linear-gradient(180deg, rgba(146,226,255,.24), rgba(49,139,196,.2));color:#f5fbff}
+.ghost-btn:hover,.cta:hover,.source-card button:hover,.link-btn:hover,.toolbar-btn:hover,.segmented button:hover{transform:translateY(-1px);border-color:var(--line-strong)}
+.source-card button,.link-btn,.toolbar-btn{border-radius:16px}
+.latest{margin-top:26px}
+.section-kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9dc4da;margin-bottom:12px}
+.latest-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.mini-card{padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px;min-height:122px}
+.mini-card strong{font-size:17px;line-height:1.18;letter-spacing:-.03em}
+.mini-card span{color:var(--muted);font-size:12px}
+.mini-meta{display:flex;justify-content:space-between;align-items:center;color:var(--soft);font-size:12px}
+.mini-tag{padding:7px 10px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:11px;color:#b6dff2}
+.page-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;margin:12px 0 22px}
+.page-title{font-size:clamp(34px,4vw,54px);line-height:.96;letter-spacing:-.05em;font-weight:780;margin:0}
+.page-desc{max-width:620px;color:var(--muted);line-height:1.65;margin:8px 0 0}
+.layout{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+.panel{padding:22px}
+.source-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.source-card{padding:20px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.source-card.active{border-color:rgba(137,220,255,.45);box-shadow:0 0 0 1px rgba(137,220,255,.22),0 20px 80px rgba(47,143,188,.18)}
+.source-icon{width:52px;height:52px;border-radius:18px;display:grid;place-items:center;background:linear-gradient(180deg, rgba(146,226,255,.17), rgba(56,110,145,.18));font-size:24px;box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+.source-card h3{margin:2px 0 0;font-size:22px;letter-spacing:-.03em}
+.source-card p{margin:0;color:var(--muted);line-height:1.6;font-size:14px}
+.source-list{display:grid;gap:12px}
+.source-item{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.kicker-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 11px;background:rgba(255,255,255,.04);font-size:11px;color:#b6dff2}
+.stat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.stat-card{padding:18px;min-height:128px;display:flex;flex-direction:column;justify-content:space-between}
+.stat-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#96bbd3}
+.stat-value{font-size:clamp(28px,3vw,44px);font-weight:780;letter-spacing:-.05em;line-height:1}
+.stat-note{font-size:12px;color:var(--muted)}
+.chart-card{padding:22px 22px 16px}
+.chart-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}
+.chart-title{font-size:22px;font-weight:740;letter-spacing:-.03em}
+.chart{display:flex;align-items:flex-end;gap:6px;height:220px;padding:10px 4px 4px;border-radius:22px;background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01));border:1px solid rgba(255,255,255,.05)}
+.bar{flex:1;min-width:8px;border-radius:999px 999px 10px 10px;background:linear-gradient(180deg, rgba(164,229,255,.95), rgba(80,182,239,.35));box-shadow:0 0 20px rgba(126,210,255,.15)}
+.legend{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-top:8px}
+.insight-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.insight{padding:22px;display:flex;flex-direction:column;gap:16px}
+.insight h3{margin:0;font-size:22px;letter-spacing:-.03em}
+.insight p{margin:0;color:var(--muted);line-height:1.65}
+.list{display:grid;gap:12px}
+.list-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid rgba(255,255,255,.07)}
+.list-item:first-child{border-top:0;padding-top:0}
+.bullet{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:rgba(146,226,255,.12);color:#bcebff;flex:none;font-size:12px;border:1px solid rgba(146,226,255,.18)}
+.kpi-table{display:grid;gap:12px}
+.kpi-row{display:grid;grid-template-columns:1.1fr repeat(3,.55fr);gap:10px;align-items:center;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05)}
+.kpi-row.head{background:transparent;border:none;padding:0 4px;color:#9dc4da;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.kpi-row strong{font-size:16px}
+.kpi-row span{font-size:14px;color:#d8f0ff}
+.strategy-box textarea{width:100%;min-height:104px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:20px;color:var(--text);padding:16px;outline:0;resize:vertical}
+.segmented{display:inline-flex;gap:8px;padding:6px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+.segmented button{background:transparent;padding:10px 14px;color:var(--muted);font-weight:600}
+.segmented button.active{background:rgba(146,226,255,.12);color:var(--text);border-color:rgba(146,226,255,.18)}
+.history-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.history-card{padding:18px;display:flex;flex-direction:column;gap:12px;min-height:180px}
+.history-card h3{margin:0;font-size:20px;letter-spacing:-.03em}
+.history-card p{margin:0;color:var(--muted);line-height:1.6}
+.history-meta{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#b4d9ed;font-size:12px;margin-top:auto}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.setting-card{padding:22px}
+.setting-card h3{margin:0 0 6px;font-size:22px;letter-spacing:-.03em}
+.setting-card p{margin:0;color:var(--muted);line-height:1.6}
+.field{margin-top:16px}
+.field label{display:block;font-size:12px;color:#9dc4da;margin-bottom:8px;letter-spacing:.08em;text-transform:uppercase}
+.input, select{width:100%;padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--text);outline:0}
+.footer-space{height:30px}
+.mobile-dock{display:none}
+.tag{padding:6px 10px;border-radius:999px;font-size:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:#bee7fb}
+.empty{padding:26px;text-align:center;color:var(--muted)}
+@media (max-width:1120px){
+  .layout,.settings-grid{grid-template-columns:1fr}
+  .source-grid,.stat-grid,.history-grid,.latest-row,.insight-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .header{padding:14px 16px}
+  .nav{display:none}
+  .top-actions .pill{display:none}
+  .hero-card{padding:22px 14px 16px}
+  .headline{font-size:clamp(32px,10vw,56px)}
+  .sub{font-size:14px}
+  .prompt-actions{flex-direction:column;align-items:stretch}
+  .latest-row,.source-grid,.stat-grid,.history-grid,.insight-grid,.settings-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr;gap:6px}
+  .mobile-dock{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:25;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:20px;background:rgba(9,22,34,.72);backdrop-filter:blur(16px);border:1px solid rgba(146,217,255,.12);box-shadow:var(--shadow)}
+  .mobile-dock button{flex:1;background:transparent;border:none;color:var(--muted);padding:8px 6px;font-size:11px;font-weight:650;border-radius:14px}
+  .mobile-dock button.active{background:rgba(255,255,255,.06);color:var(--text)}
+  .page{padding-bottom:96px}
+}
+
+/* Sidebar navigation — Simulation */
+.workspace-main{margin-left:280px;min-height:100vh;position:relative;transition:margin-left .24s ease}
+.sidebar{position:fixed;z-index:45;inset:0 auto 0 0;width:280px;padding:28px 15px 17px;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;background:linear-gradient(165deg,rgba(19,45,64,.96) 0%,rgba(8,22,36,.96) 44%,rgba(5,17,29,.97) 100%);border-right:1px solid rgba(152,218,255,.17);box-shadow:10px 0 65px rgba(0,0,0,.18),inset -1px 0 0 rgba(255,255,255,.02);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);transition:transform .24s,width .24s}
+.sidebar:before{content:"";position:absolute;width:280px;height:280px;top:-155px;left:-100px;background:radial-gradient(circle,rgba(89,184,251,.17),transparent 70%);pointer-events:none}
+.sidebar-top{display:flex;align-items:center;justify-content:space-between;padding:0 10px}
+.side-brand{appearance:none;background:none;border:0;padding:0;text-align:left;white-space:nowrap;min-width:0}
+.side-brand .brand-mark{width:37px;height:37px;border-radius:12px;flex:none}
+.side-brand .brand-copy{font-size:20px;font-weight:790;letter-spacing:-.05em;min-width:0}
+.side-brand .brand-copy small{font-size:8px;font-weight:650;letter-spacing:.16em;margin-top:5px}
+.nav-icon{width:19px;height:19px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.sidebar-new{width:100%;height:48px;display:flex;align-items:center;gap:12px;margin:38px 0 32px;border-radius:16px;border:1px solid rgba(175,237,255,.28);background:linear-gradient(135deg,rgba(145,221,255,.24),rgba(65,152,213,.14));color:#effaff;font-weight:700;text-align:left;padding:0 14px;white-space:nowrap;box-shadow:inset 0 1px rgba(255,255,255,.14),0 10px 30px rgba(28,139,207,.08);transition:.2s}
+.sidebar-new:hover{border-color:rgba(175,237,255,.65);background:linear-gradient(135deg,rgba(145,221,255,.32),rgba(65,152,213,.23))}
+.sidebar-shortcut{margin-left:auto;font-size:17px;color:#9eddfc;font-weight:400}
+.sidebar-group-label{font-size:10px;color:#739db8;letter-spacing:.16em;font-weight:750;padding:0 14px;margin:0 0 13px;white-space:nowrap}
+.side-nav{display:flex;flex-direction:column;gap:5px}
+.side-nav button,.side-settings{width:100%;min-height:46px;display:flex;align-items:center;gap:14px;padding:0 13px;border-radius:12px;border:1px solid transparent;background:transparent;color:#91b0c6;font-size:13px;font-weight:640;text-align:left;position:relative;white-space:nowrap;transition:.2s}
+.side-nav button:hover,.side-settings:hover{background:rgba(154,225,255,.065);color:#ecf9ff}
+.side-nav button.active,.side-settings.active{background:linear-gradient(90deg,rgba(121,215,255,.16),rgba(126,199,251,.05));border-color:rgba(142,220,255,.12);color:#e4f7ff}
+.side-nav button.active:before,.side-settings.active:before{content:"";width:3px;height:22px;border-radius:5px;background:#8bdcfd;position:absolute;left:-16px;top:11px;box-shadow:0 0 13px #74caff}
+.side-nav button.active .nav-icon,.side-settings.active .nav-icon{color:#8bdcfd}
+.nav-count{margin-left:auto;padding:3px 7px;border-radius:7px;border:1px solid rgba(142,220,255,.13);font-size:10px;color:#bcdaf1;background:rgba(255,255,255,.03)}
+.side-rule{height:1px;background:rgba(170,217,255,.09);margin:26px 10px 25px}
+.side-recents{display:grid;gap:5px;padding:0 4px}
+.side-recents button{background:transparent;border:1px solid transparent;border-radius:12px;display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;color:#a9c5d6;padding:11px 9px;transition:.2s}
+.side-recents button:hover{background:rgba(255,255,255,.05);border-color:rgba(166,223,255,.07);color:white}
+.side-recent-dot{margin-top:7px;width:6px;height:6px;flex:none;background:#5fc9f9;border-radius:50%;box-shadow:0 0 11px rgba(95,201,249,.6)}
+.side-recents .recent-copy{min-width:0;font-size:11.5px;line-height:1.5}
+.side-recents .recent-copy strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;font-weight:600}
+.side-recents .recent-copy small{font-size:10px;color:#7398ac;display:block;margin-top:4px}
+.sidebar-bottom{margin-top:auto;padding-top:26px;display:flex;flex-direction:column;gap:7px}
+.side-status{display:flex;align-items:center;gap:9px;font-size:11px;color:#83adc5;padding:12px 13px;background:rgba(138,215,255,.045);border:1px solid rgba(138,215,255,.08);border-radius:11px;margin-bottom:12px}
+.side-status strong{color:#caecff;font-weight:600}
+.side-status-dot{width:7px;height:7px;background:#73e0b9;border-radius:50%;box-shadow:0 0 12px rgba(115,224,185,.8)}
+.side-account{border-top:1px solid rgba(166,223,255,.1);padding:18px 9px 9px;display:flex;align-items:center;gap:10px;white-space:nowrap}
+.side-avatar{width:33px;height:33px;flex:none;display:grid;place-items:center;border-radius:11px;background:linear-gradient(135deg,#467a9c,#1e3c57);border:1px solid rgba(165,228,255,.2);color:#d8f3ff;font-size:11px;font-weight:750}
+.side-account strong,.side-account small{display:block}.side-account strong{font-size:11px}.side-account small{color:#7d9cb0;font-size:10px;margin-top:3px}
+.collapse-btn{height:34px;width:100%;display:flex;align-items:center;gap:11px;padding:8px 12px;border:none;background:transparent;color:#799caf;font-size:11px;text-align:left;border-radius:10px}
+.collapse-btn:hover{background:rgba(146,220,255,.07);color:#b6e7ff}
+.collapse-btn .nav-icon{width:14px;height:14px}
+.sidebar-close,.sidebar-backdrop,.mobile-topbar{display:none}
+/* Use the entire space to the right of the sidebar; keep all orbital content centered there. */
+.page{max-width:1510px;padding:28px clamp(22px,3.5vw,54px) 58px}
+.hero-wrap{min-height:100vh;padding:18px 0 62px}
+#orbitCanvas{width:min(90%,920px);height:min(67vw,680px)}
+.hero-card{width:min(820px,100%)}
+.headline{font-size:clamp(44px,5.8vw,83px)}
+.app.sidebar-collapsed .sidebar{width:82px;padding-inline:13px}
+.app.sidebar-collapsed .workspace-main{margin-left:82px}
+.app.sidebar-collapsed .sidebar-label{display:none !important}
+.app.sidebar-collapsed .sidebar-top{padding:0 7px}
+.app.sidebar-collapsed .side-nav button,.app.sidebar-collapsed .side-settings{justify-content:center;padding:0}
+.app.sidebar-collapsed .sidebar-new{justify-content:center;padding:0}
+.app.sidebar-collapsed .side-account{justify-content:center;padding-inline:0}
+.app.sidebar-collapsed .collapse-btn{justify-content:center;padding:0}
+.app.sidebar-collapsed .collapse-btn .nav-icon{transform:rotate(180deg)}
+.app.sidebar-collapsed .side-nav button.active:before,.app.sidebar-collapsed .side-settings.active:before{left:-14px}
+
+@media (max-width:760px){
+ .sidebar{width:min(305px,86vw);padding:24px 16px 18px;transform:translateX(-110%);box-shadow:16px 0 80px rgba(0,0,0,.4)}
+ .app.sidebar-collapsed .sidebar{width:min(305px,86vw);padding:24px 16px 18px}
+ .app.sidebar-collapsed .sidebar-label{display:initial !important}
+ .app.sidebar-collapsed .side-recents{display:grid !important}
+ .app.sidebar-collapsed .sidebar-top,.sidebar-top{padding:0 10px}
+ .app.sidebar-collapsed .side-nav button,.app.sidebar-collapsed .side-settings,.app.sidebar-collapsed .sidebar-new,.app.sidebar-collapsed .side-account,.app.sidebar-collapsed .collapse-btn{justify-content:flex-start;padding-inline:13px}
+ .app.sidebar-collapsed .sidebar-new{padding-inline:14px}
+ .app.sidebar-collapsed .collapse-btn{display:none}
+ .sidebar.mobile-open{transform:translateX(0)}
+ .sidebar-close,.mobile-topbar{display:flex}
+ .sidebar-close{width:33px;height:33px;flex:none;border:1px solid var(--line);border-radius:10px;align-items:center;justify-content:center;background:rgba(255,255,255,.045);color:#cae9fa}
+ .sidebar-close .nav-icon{width:17px;height:17px}
+ .sidebar-backdrop.visible{display:block;position:fixed;inset:0;background:rgba(0,8,17,.66);backdrop-filter:blur(5px);z-index:40}
+ .mobile-topbar{height:69px;position:sticky;top:0;z-index:30;padding:13px 18px;align-items:center;justify-content:space-between;background:rgba(6,18,29,.75);border-bottom:1px solid rgba(146,217,255,.11);backdrop-filter:blur(18px)}
+ .mobile-brand{border:0;background:transparent;padding:0;gap:10px;text-align:left}
+ .mobile-brand .brand-mark{width:34px;height:34px;border-radius:11px}
+ .mobile-brand .brand-copy{font-size:18px;letter-spacing:-.03em}
+ .mobile-brand .brand-copy small{font-size:7px;letter-spacing:.12em}
+ .mobile-menu-btn{height:40px;width:44px;display:grid;place-items:center;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#e0f4ff}
+ .workspace-main,.app.sidebar-collapsed .workspace-main{margin-left:0}
+ .page{padding:20px 17px 42px}
+ .hero-wrap{min-height:calc(100dvh - 69px);padding:22px 0 38px}
+ .hero-card{width:100%;background:linear-gradient(180deg,rgba(9,29,46,.22),rgba(17,34,51,.08))}
+ .headline{font-size:clamp(36px,9vw,64px)}
+ #orbitCanvas{width:min(100%,680px);height:min(95vw,500px);max-height:none}
+ .mobile-dock{display:none !important}
+}
+@media (prefers-reduced-motion:reduce){.sidebar,.workspace-main,.sidebar-new,.side-nav button{transition:none}}
+
+
+/* Method selection — step between the objective and data sources. */
+.method-objective{padding:20px 24px;margin-bottom:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.method-objective p{margin:0;font-size:19px;font-weight:640;line-height:1.5;letter-spacing:-.025em;overflow-wrap:anywhere;max-width:780px}
+.method-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.method-card{padding:22px;display:flex;flex-direction:column;gap:14px;min-width:0;transition:border-color .2s,box-shadow .2s,transform .2s}
+.method-card.selected{border-color:rgba(135,220,255,.7);box-shadow:0 0 0 1px rgba(135,220,255,.2),0 15px 60px rgba(41,128,185,.2)}
+.method-card h3{font-size:22px;margin:0;letter-spacing:-.035em}
+.method-card p{margin:0;color:var(--muted);font-size:14px;line-height:1.65;flex:1}
+.method-card-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.method-card-top .tag{flex:none}
+.method-card .method-use{width:100%;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.055);padding:12px 16px;color:var(--text);font-weight:680;transition:.2s}
+.method-card .method-use:hover,.method-card.selected .method-use{background:linear-gradient(135deg,rgba(145,221,255,.22),rgba(65,152,213,.13));border-color:var(--line-strong)}
+.method-review{padding:22px 24px;margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center}
+.method-formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.9;overflow-wrap:anywhere;padding:16px 18px;border-radius:18px;background:rgba(2,13,24,.4);border:1px solid var(--line);color:#d0edff;white-space:pre-line}
+.method-review p{color:var(--muted);font-size:13px;line-height:1.65;margin:8px 0 0}
+button:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+@media (max-width:1180px){.method-grid,.method-review{grid-template-columns:1fr}}
+@media (max-width:760px){.method-objective{padding:18px}.method-card{padding:18px}.method-review{padding:18px}}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="noise"></div>
+  <div class="grid"></div>
+  <svg class="icon-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="ic-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="ic-data" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+    <symbol id="ic-decide" viewBox="0 0 24 24"><path d="M4 19h16M6 16l4-5 4 3 5-8"/><path d="M16 6h3v3"/></symbol>
+    <symbol id="ic-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.8-6.5L3 8"/><path d="M3 3v5h5M12 7v6l4 2"/></symbol>
+    <symbol id="ic-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 1 .2 1.8l-1.1 1.8a1.6 1.6 0 0 1-1.7.7l-1.7-.5a8 8 0 0 1-1.7 1l-.4 1.7a1.6 1.6 0 0 1-1.5 1.1H9.4A1.6 1.6 0 0 1 7.9 21l-.4-1.7a8 8 0 0 1-1.7-1l-1.7.5a1.6 1.6 0 0 1-1.7-.7l-1.1-1.8a1.6 1.6 0 0 1 .2-1.8l1.3-1.3a8 8 0 0 1 0-2l-1.3-1.3a1.6 1.6 0 0 1-.2-1.8l1.1-1.8a1.6 1.6 0 0 1 1.7-.7l1.7.5a8 8 0 0 1 1.7-1l.4-1.7A1.6 1.6 0 0 1 9.4 2h2.1A1.6 1.6 0 0 1 13 3.1l.4 1.7a8 8 0 0 1 1.7 1l1.7-.5a1.6 1.6 0 0 1 1.7.7l1.1 1.8a1.6 1.6 0 0 1-.2 1.8l-1.3 1.3a8 8 0 0 1 0 2z" transform="translate(1 0) scale(.93)"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="ic-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+    <symbol id="ic-chevron" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+    <symbol id="ic-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="ic-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/></symbol>
+  </svg>
+  <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
+  <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <div class="sidebar-top">
+      <button class="brand side-brand" data-nav="home" title="Simulation Home" aria-label="Simulation Home">
+        <span class="brand-mark">✦</span>
+        <span class="brand-copy">Simulation<small>STRATEGY INTELLIGENCE</small></span>
+      </button>
+      <button id="closeSidebarBtn" class="sidebar-close" aria-label="Close navigation"><svg class="nav-icon"><use href="#ic-close"/></svg></button>
+    </div>
+    <button class="sidebar-new" id="newProjectBtn" title="New decision">
+      <svg class="nav-icon"><use href="#ic-plus"/></svg><span class="sidebar-label">New decision</span><span class="sidebar-shortcut sidebar-label">↗</span>
+    </button>
+    <div class="sidebar-group-label sidebar-label">WORKSPACE</div>
+    <nav class="side-nav" aria-label="Workspace">
+      <button class="active" data-nav="home" title="Home"><svg class="nav-icon"><use href="#ic-home"/></svg><span class="sidebar-label">Home</span></button>
+      <button data-nav="data" title="Data sources"><svg class="nav-icon"><use href="#ic-data"/></svg><span class="sidebar-label">Data sources</span></button>
+      <button data-nav="decide" title="Decision studio"><svg class="nav-icon"><use href="#ic-decide"/></svg><span class="sidebar-label">Decision studio</span></button>
+      <button data-nav="history" title="Decision history"><svg class="nav-icon"><use href="#ic-history"/></svg><span class="sidebar-label">Decision history</span><span id="sideHistoryCount" class="nav-count sidebar-label">3</span></button>
+    </nav>
+    <div class="side-rule sidebar-label"></div>
+    <div class="sidebar-group-label sidebar-label">RECENT DECISIONS</div>
+    <div class="side-recents sidebar-label" id="sideRecents"></div>
+    <div class="sidebar-bottom">
+      <div class="side-status sidebar-label"><span class="side-status-dot"></span><span>Decision engine <strong>ready</strong></span></div>
+      <button class="side-settings" data-nav="settings" title="Settings"><svg class="nav-icon"><use href="#ic-settings"/></svg><span class="sidebar-label">Settings</span></button>
+      <div class="side-account">
+        <span class="side-avatar">EX</span>
+        <span class="sidebar-label"><strong>Executive workspace</strong><small>Demo environment</small></span>
+      </div>
+      <button class="collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar" aria-label="Collapse sidebar"><svg class="nav-icon"><use href="#ic-chevron"/></svg><span class="sidebar-label">Collapse</span></button>
+    </div>
+  </aside>
+  <div class="mobile-topbar">
+    <button class="brand mobile-brand" data-nav="home" aria-label="Home"><span class="brand-mark">✦</span><span class="brand-copy">Simulation<small>STRATEGY INTELLIGENCE</small></span></button>
+    <button class="mobile-menu-btn" id="openSidebarBtn" aria-label="Open navigation" aria-expanded="false" aria-controls="sidebar"><svg class="nav-icon"><use href="#ic-menu"/></svg></button>
+  </div>
+  <main class="workspace-main">
+    <section id="page-home" class="page">
+      <div class="hero-wrap">
+        <div class="orbit-scene"><canvas id="orbitCanvas" width="920" height="680" aria-hidden="true"></canvas></div>
+        <div class="hero-card">
+          <div class="micro">Decision intelligence</div>
+          <h1 class="headline" id="heroHeadline">The future isn’t a guess.</h1>
+          <p class="sub">Frame the decision. The agent handles the model. You focus on the move.</p>
+          <div class="prompt-box glass">
+            <textarea id="objectiveInput" placeholder="What do you want to foresee?"></textarea>
+            <div class="prompt-actions">
+              <div class="helper">Examples: EBITDA growth, pricing change, expansion risk, cash runway.</div>
+              <button class="cta" id="startDecisionBtn">Explore decision</button>
+            </div>
+          </div>
+          <div class="latest">
+            <div class="section-kicker">Latest decisions</div>
+            <div class="latest-row" id="latestDecisions"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="page-method" class="page hidden">
+      <div class="page-header">
+        <div>
+          <div class="micro">Step 1 · Simulation model</div>
+          <h2 class="page-title">Choose your simulation method.</h2>
+          <p class="page-desc">The agent suggests an approach based on your objective. Review the modeling assumptions and select the method you want to use before choosing data sources.</p>
+        </div>
+        <div class="toolbar">
+          <button class="toolbar-btn" id="methodBackBtn">Back to objective</button>
+          <button class="cta" id="methodContinueBtn" disabled>Continue to data sources →</button>
+        </div>
+      </div>
+      <div class="method-objective glass">
+        <div>
+          <div class="section-kicker">Your objective</div>
+          <p id="methodObjective"></p>
+        </div>
+        <span class="tag" id="methodRecommendation"></span>
+      </div>
+      <div class="method-grid">
+        <article class="method-card glass" data-method="hybrid">
+          <div class="method-card-top"><span class="tag">Integrated modeling</span><span class="tag method-recommend-tag hidden">Agent pick</span></div>
+          <h3>Hybrid causal simulation</h3>
+          <p>Combines dynamic feedback loops, correlated uncertainty, and scenario sampling. Best when financial and operational decisions affect one another over time.</p>
+          <button class="method-use" data-select-method="hybrid" aria-pressed="false">Select method</button>
+        </article>
+        <article class="method-card glass" data-method="monte">
+          <div class="method-card-top"><span class="tag">Probabilistic</span><span class="tag method-recommend-tag hidden">Agent pick</span></div>
+          <h3>Correlated Monte Carlo</h3>
+          <p>Models joint uncertainty with correlated inputs, nonlinear KPI responses, and sensitivity analysis. Best for quantifying risk, outcome ranges, and target probabilities.</p>
+          <button class="method-use" data-select-method="monte" aria-pressed="false">Select method</button>
+        </article>
+        <article class="method-card glass" data-method="dynamics">
+          <div class="method-card-top"><span class="tag">Time-dependent</span><span class="tag method-recommend-tag hidden">Agent pick</span></div>
+          <h3>System Dynamics</h3>
+          <p>Uses stock-and-flow equations, feedback, and delayed effects. Best for capacity, inventory, workforce, and compounding operational trade-offs.</p>
+          <button class="method-use" data-select-method="dynamics" aria-pressed="false">Select method</button>
+        </article>
+        <article class="method-card glass" data-method="mdp">
+          <div class="method-card-top"><span class="tag">Sequential decisions</span><span class="tag method-recommend-tag hidden">Agent pick</span></div>
+          <h3>Markov Decision Process</h3>
+          <p>Optimizes actions across uncertain transitions, with explicit rewards and constraints. Best for resource allocation and decisions that adapt across multiple stages.</p>
+          <button class="method-use" data-select-method="mdp" aria-pressed="false">Select method</button>
+        </article>
+      </div>
+      <div class="method-review glass" aria-live="polite">
+        <div>
+          <div class="section-kicker">Model specification preview</div>
+          <h3 style="font-size:23px;letter-spacing:-.03em;margin:0" id="methodPreviewTitle"></h3>
+          <p id="methodPreviewSummary"></p>
+          <p style="font-size:11px">Prototype note: selecting a method configures this flow's interface. Method-specific computation requires backend integration; the current result screen uses demo simulation logic.</p>
+        </div>
+        <div class="method-formula" id="methodFormula"></div>
+      </div>
+    </section>
+
+    <section id="page-data" class="page hidden">
+      <div class="page-header">
+        <div>
+          <div class="micro">Data</div>
+          <h2 class="page-title">Bring context.</h2>
+          <p class="page-desc">Pick where the agent should gather evidence for your selected simulation method.</p>
+        </div>
+        <div class="toolbar">
+          <button class="toolbar-btn" id="backHomeBtn">Back to method</button>
+          <button class="cta" id="useDataBtn">Use selected source</button>
+        </div>
+      </div>
+      <div class="source-grid">
+        <article class="source-card glass active" data-source="csv">
+          <div class="source-icon">⤓</div>
+          <div class="kicker-row"><span class="chip">Structured</span><span class="chip">Fast</span></div>
+          <h3>Upload CSV</h3>
+          <p>Bring historical business data and let the agent extract variables, ranges, seasonality, and anomalies.</p>
+          <button>Select source</button>
+        </article>
+        <article class="source-card glass" data-source="database">
+          <div class="source-icon">⌘</div>
+          <div class="kicker-row"><span class="chip">Trusted</span><span class="chip">Internal</span></div>
+          <h3>Database</h3>
+          <p>Use governed company data. The platform will test connectivity, understand tables, and map KPI meaning.</p>
+          <button>Select source</button>
+        </article>
+        <article class="source-card glass" data-source="internet">
+          <div class="source-icon">◎</div>
+          <div class="kicker-row"><span class="chip">External</span><span class="chip">Benchmarks</span></div>
+          <h3>Internet exploration</h3>
+          <p>Allow the agent to gather public signals, macro context, competitor references, and market assumptions.</p>
+          <button>Select source</button>
+        </article>
+      </div>
+      <div class="layout" style="margin-top:18px">
+        <div class="panel glass">
+          <div class="section-kicker">Current decision</div>
+          <h3 style="font-size:30px;letter-spacing:-.04em;margin:0 0 10px" id="dataObjective"></h3>
+          <p style="color:var(--muted);line-height:1.72;margin:0 0 18px">The selected simulation method shapes the model specification. The agent will map its variables, dependencies, assumptions, and evidence requirements to your company context.</p>
+          <div class="source-list">
+            <div class="source-item"><span>Simulation method</span><span class="tag" id="selectedMethodLabel">Not selected</span></div>
+            <div class="source-item"><span>Cross-validation</span><span class="tag">Enabled</span></div>
+            <div class="source-item"><span>Variable extraction</span><span class="tag" id="selectedSourceLabel">CSV source selected</span></div>
+          </div>
+        </div>
+        <div class="panel glass">
+          <div class="section-kicker">Review gate</div>
+          <h3 style="font-size:28px;letter-spacing:-.04em;margin:0 0 10px">Ready to proceed?</h3>
+          <p style="color:var(--muted);line-height:1.72;margin:0 0 16px">Once you approve, the agent prepares assumptions, pulls data from the selected route, and generates a decision view. Simulation scale is controlled in Settings.</p>
+          <div class="list">
+            <div class="list-item"><div class="bullet">1</div><div><strong>Source permission</strong><p>Only approved data channels are used.</p></div></div>
+            <div class="list-item"><div class="bullet">2</div><div><strong>Assumption synthesis</strong><p>Variables, KPI links, and dependencies are inferred and checked.</p></div></div>
+            <div class="list-item"><div class="bullet">3</div><div><strong>Decision run</strong><p>The engine runs and returns an executive summary.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-decide" class="page hidden">
+      <div class="page-header">
+        <div>
+          <div class="micro">Decide</div>
+          <h2 class="page-title">See the move.</h2>
+          <p class="page-desc">A concise view of outcome confidence, downside exposure, strategic fit, and what to do next.</p>
+        </div>
+        <div class="toolbar">
+          <div class="tag" id="activeMethodTag">Demo method</div>
+          <div class="tag" id="decideScaleTag">10K default</div>
+          <button class="cta" id="rerunBtn">Re-run</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="summaryStats"></div>
+      <div class="layout" style="margin-top:16px">
+        <div class="chart-card glass">
+          <div class="chart-header">
+            <div>
+              <div class="section-kicker">Outcome distribution</div>
+              <div class="chart-title" id="distributionTitle">Decision outlook</div>
+            </div>
+            <div class="tag" id="simCountTag">10,000 runs</div>
+          </div>
+          <div class="chart" id="chartBars"></div>
+          <div class="legend"><span>Downside</span><span>Expected</span><span>Upside</span></div>
+        </div>
+        <div class="panel glass strategy-box">
+          <div class="section-kicker">Strategy input</div>
+          <h3 style="font-size:28px;letter-spacing:-.04em;margin:0 0 10px">What move are you considering?</h3>
+          <textarea id="strategyInput" placeholder="Example: Improve EBITDA by raising price 3%, reducing overtime, and focusing on premium accounts."></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="cta" id="reviewStrategyBtn">Review strategy</button></div>
+        </div>
+      </div>
+      <div class="insight-grid">
+        <article class="insight glass">
+          <div class="section-kicker">AI insight</div>
+          <h3>Risk mitigation</h3>
+          <div class="list" id="mitigationList"></div>
+        </article>
+        <article class="insight glass">
+          <div class="section-kicker">AI insight</div>
+          <h3>KPI range & warning</h3>
+          <div class="kpi-table" id="kpiTable"></div>
+        </article>
+        <article class="insight glass">
+          <div class="section-kicker">AI insight</div>
+          <h3>Strategy review</h3>
+          <p id="strategyReview">Add a strategy and the agent will check how aligned it is with the key KPI drivers.</p>
+          <div class="list" id="strategyReviewList"></div>
+        </article>
+        <article class="insight glass">
+          <div class="section-kicker">AI insight</div>
+          <h3>Tactics by division</h3>
+          <div class="list" id="tacticsList"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="page-history" class="page hidden">
+      <div class="page-header">
+        <div>
+          <div class="micro">History</div>
+          <h2 class="page-title">Latest decision library.</h2>
+          <p class="page-desc">Saved runs, ready to revisit, compare, or delete.</p>
+        </div>
+      </div>
+      <div class="history-grid" id="historyGrid"></div>
+      <div id="historyEmpty" class="empty glass hidden">No saved decisions yet.</div>
+    </section>
+
+    <section id="page-settings" class="page hidden">
+      <div class="page-header">
+        <div>
+          <div class="micro">Settings</div>
+          <h2 class="page-title">Control the engine.</h2>
+          <p class="page-desc">Simulation volume, company context, and source permissions live here — not in the decision flow.</p>
+        </div>
+      </div>
+      <div class="settings-grid">
+        <article class="setting-card glass">
+          <h3>Simulation scale</h3>
+          <p>Select the default simulation volume. Higher counts improve stability but take longer.</p>
+          <div class="field">
+            <label>Default runs</label>
+            <div class="segmented" id="settingsScale">
+              <button data-scale="1000">1K</button>
+              <button class="active" data-scale="10000">10K</button>
+              <button data-scale="100000">100K</button>
+            </div>
+          </div>
+        </article>
+        <article class="setting-card glass">
+          <h3>Company context</h3>
+          <p>Help the agent understand your business reality.</p>
+          <div class="field"><label>Company</label><input id="companyInput" class="input" placeholder="Atlas Manufacturing" /></div>
+          <div class="field"><label>Industry</label><input id="industryInput" class="input" placeholder="Industrial manufacturing" /></div>
+        </article>
+        <article class="setting-card glass">
+          <h3>Data permissions</h3>
+          <p>Choose which external and internal channels can be used by the agent.</p>
+          <div class="field"><label>Internet research</label><select id="internetPermission"><option value="allowed">Allowed</option><option value="ask">Ask first</option><option value="blocked">Blocked</option></select></div>
+          <div class="field"><label>Database access</label><select id="dbPermission"><option value="ask">Ask first</option><option value="allowed">Allowed</option><option value="blocked">Blocked</option></select></div>
+        </article>
+        <article class="setting-card glass">
+          <h3>Model & BYOK</h3>
+          <p>Prototype only — visual placeholder for provider settings.</p>
+          <div class="field"><label>Model provider</label><select id="providerInput"><option>OpenAI</option><option>Anthropic</option><option>Google</option><option>Bring your own key</option></select></div>
+          <div class="field"><label>Agent mode</label><input class="input" value="Deep Agents + LangGraph" readonly /></div>
+        </article>
+      </div>
+      <div class="footer-space"></div>
+    </section>
+  </main>
+
+
+</div>
+
+<script>
+const KEY='north_future_prototype_v2';
+const defaultState={
+  page:'home',
+  objective:'',
+  source:'csv',
+  method:null,
+  simScale:10000,
+  company:'Atlas Manufacturing',
+  industry:'Industrial manufacturing',
+  permissions:{internet:'allowed',db:'ask'},
+  provider:'OpenAI',
+  strategy:'',
+  history:[
+    {id:'d1',title:'Can we grow EBITDA 20% next year?',date:'Today',success:74,p50:21.8,risk:'Medium'},
+    {id:'d2',title:'What happens if we raise price 3%?',date:'Yesterday',success:68,p50:16.4,risk:'Low'},
+    {id:'d3',title:'How much cash runway do we have?',date:'2 days ago',success:81,p50:14.2,risk:'Medium'}
+  ],
+  result:null
+};
+let state=load();
+function load(){try{const raw=localStorage.getItem(KEY);if(raw){return {...defaultState,...JSON.parse(raw),permissions:{...defaultState.permissions,...(JSON.parse(raw).permissions||{})}}}}catch(e){}return structuredClone(defaultState)}
+function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+const $=s=>document.querySelector(s); const $$=s=>Array.from(document.querySelectorAll(s));
+function navigate(page){closeMobileSidebar();state.page=page;save();$$('[id^="page-"]').forEach(sec=>sec.classList.add('hidden'));$('#page-'+page).classList.remove('hidden');$$('[data-nav]').forEach(btn=>btn.classList.toggle('active',btn.dataset.nav===(page==='method'?'home':page)));if(page==='history') renderHistory();if(page==='method') renderMethodPage();if(page==='data') renderDataPage();if(page==='decide') renderDecide();if(page==='settings') renderSettings();window.scrollTo({top:0,behavior:'smooth'})}
+function escapeHtml(str=''){return str.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function renderLatest(){const wrap=$('#latestDecisions');const items=state.history.slice(0,3);renderSideRecents();wrap.innerHTML=items.map(item=>`<article class="mini-card glass"><span>${escapeHtml(item.date)}</span><strong>${escapeHtml(item.title)}</strong><div class="mini-meta"><span class="mini-tag">P(target) ${item.success}%</span><span>${item.risk} risk</span></div></article>`).join('')}
+const methods={
+  hybrid:{name:'Hybrid causal simulation',description:'Dynamic state transitions combined with correlated uncertainty and scenario-based KPI evaluation.',formula:'xₜ₊₁ = xₜ + Δt · f(xₜ, uₜ, θ) + Lεₜ\nP(goal) ≈ (1/N) Σᵢ 𝟙[KPI(xᵢ) ≥ target]'},
+  monte:{name:'Correlated Monte Carlo',description:'Multivariate input distributions, dependency structure, and probabilistic outcome estimation.',formula:'X = μ + LZ,  Z ∼ N(0, I)\nP(goal) ≈ (1/N) Σᵢ 𝟙[g(Xᵢ) ≥ target]'},
+  dynamics:{name:'System Dynamics',description:'Coupled stocks, flows, and feedback mechanisms with delayed responses over time.',formula:'dS/dt = Inflows(S,u) − Outflows(S,u)\nKPI(t) = h(S(t), feedback, delays)'},
+  mdp:{name:'Markov Decision Process',description:'State-dependent action policies under uncertain transitions, constraints, and discounted rewards.',formula:'V(s) = maxₐ [R(s,a) + γΣₛ′P(s′|s,a)V(s′) ]\nπ*(s) = argmaxₐ Q(s,a)'}
+};
+function recommendMethod(objective){
+  const o=(objective||'').toLowerCase();
+  if(/allocation|sequential|policy|optimi[sz]|adaptive|multi.stage/.test(o)) return 'mdp';
+  if(/inventory|capacity|supply|production|workforce|throughput|feedback/.test(o)) return 'dynamics';
+  if(/volatility|probability|uncertainty|risk|cash runway|forecast/.test(o)) return 'monte';
+  return 'hybrid';
+}
+function renderMethodPage(){
+  const suggested=recommendMethod(state.objective);
+  $('#methodObjective').textContent=state.objective||'What do you want to foresee?';
+  $('#methodRecommendation').textContent='Suggested: '+methods[suggested].name;
+  $$('.method-card').forEach(card=>{
+    const id=card.dataset.method;
+    const selected=id===state.method;
+    card.classList.toggle('selected',selected);
+    card.querySelector('.method-recommend-tag').classList.toggle('hidden',id!==suggested);
+    const btn=card.querySelector('.method-use');
+    btn.textContent=selected?'✓ Selected':'Select method';
+    btn.setAttribute('aria-pressed',String(selected));
+  });
+  $('#methodContinueBtn').disabled=!state.method;
+  const preview=methods[state.method]||methods[suggested];
+  $('#methodPreviewTitle').textContent=(state.method?'Selected: ':'Suggested: ')+preview.name;
+  $('#methodPreviewSummary').textContent=preview.description+(!state.method?' Select a method above to continue.':'');
+  $('#methodFormula').textContent=preview.formula;
+}
+function selectMethod(id){
+  if(!methods[id])return;
+  state.method=id;state.result=null;save();renderMethodPage();
+}
+
+function renderDataPage(){ $('#dataObjective').textContent=state.objective||'What do you want to foresee?'; $('#selectedSourceLabel').textContent=(state.source==='csv'?'CSV source selected':state.source==='database'?'Database source selected':'Internet source selected'); $('#selectedMethodLabel').textContent=methods[state.method]?.name||'Not selected'; $$('.source-card').forEach(card=>card.classList.toggle('active',card.dataset.source===state.source)); }
+function seeded(seed){let s=seed>>>0;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)}
+function gaussian(rand){let u=0,v=0;while(u===0)u=rand();while(v===0)v=rand();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+function simulate(){const text=(state.objective||'').toLowerCase();const strat=(state.strategy||'').toLowerCase();let baseRevenue=100;let revenueShift=0,costShift=0,volatility=1; if(text.includes('cash')){baseRevenue=80;costShift=4;volatility=1.1} if(text.includes('price')){revenueShift+=4;volatility+=.1} if(text.includes('expansion')){volatility+=.18;costShift+=6} if(strat.includes('price')) revenueShift+=5; if(strat.includes('premium')) revenueShift+=2.5; if(strat.includes('marketing')||strat.includes('sales')) revenueShift+=3; if(strat.includes('efficiency')||strat.includes('overtime')||strat.includes('cost')) costShift-=5; if(strat.includes('hiring')||strat.includes('expand team')) costShift+=4;
+const rand=seeded(42+state.simScale);
+let outcomes=[];
+for(let i=0;i<state.simScale;i++){
+  const demand=gaussian(rand)*8*volatility + (text.includes('volume')?10:4);
+  const margin=gaussian(rand)*5 + 17 + revenueShift*.35 - costShift*.28;
+  const cost=gaussian(rand)*4 + 64 + costShift - revenueShift*.15;
+  const execution=gaussian(rand)*6 + 75 + (state.source==='database'?4:state.source==='internet'?-2:0);
+  const ebitda=(baseRevenue + demand)*((margin)/100) - (cost-58)*0.9 + execution*0.12;
+  outcomes.push(ebitda);
+}
+outcomes.sort((a,b)=>a-b);
+const mean=outcomes.reduce((a,b)=>a+b,0)/outcomes.length;
+const pct=p=>outcomes[Math.max(0,Math.min(outcomes.length-1,Math.floor(outcomes.length*p)))];
+const target=text.includes('cash')?12:20;
+ const success=100*outcomes.filter(v=>v>=target).length/outcomes.length;
+ const p10=pct(.10),p50=pct(.50),p90=pct(.90),p5=pct(.05),p95=pct(.95);
+ const bins=new Array(20).fill(0); const min=outcomes[0], max=outcomes[outcomes.length-1]; outcomes.forEach(v=>{const idx=Math.min(19,Math.max(0,Math.floor((v-min)/(max-min||1)*20))); bins[idx]++});
+ const bestRevenue=(text.includes('cash')?14:26)+revenueShift*.45; const worstRevenue=(text.includes('cash')?4:8)+revenueShift*.2;
+ state.result={success,mean,p10,p50,p90,p5,p95,target,bins,
+ kpis:[
+   {name:'Revenue Growth',best:(bestRevenue).toFixed(1)+'%',worst:(worstRevenue).toFixed(1)+'%',warning:'< 7%'},
+   {name:'EBITDA Margin',best:(p95).toFixed(1)+'%',worst:(p5).toFixed(1)+'%',warning:'< 12%'},
+   {name:'Operating Cash Flow',best:(p90*1.6).toFixed(1)+'M',worst:(p10*1.2).toFixed(1)+'M',warning:'< 9M'},
+   {name:'Execution Score',best:Math.min(95,86+revenueShift).toFixed(0),worst:Math.max(45,58-costShift).toFixed(0),warning:'< 60'}
+ ],
+ risk:[
+   ['Demand softness','Set weekly pipeline threshold and contingency offers for key segments.'],
+   ['Margin compression','Lock pricing guardrails and pre-approve discount exceptions only for strategic accounts.'],
+   ['Execution drift','Track overtime, downtime, and lead time weekly with escalation at warning thresholds.']
+ ]};
+ save();
+}
+function renderStats(){if(!state.result) simulate(); const r=state.result; const stats=[['P(target)',r.success.toFixed(0)+'%','Chance of meeting the objective'],['Expected',r.p50.toFixed(1)+'%','Median projected outcome'],['Downside',r.p10.toFixed(1)+'%','10th percentile case'],['Upside',r.p90.toFixed(1)+'%','90th percentile case']]; $('#summaryStats').innerHTML=stats.map(([l,v,n])=>`<article class="stat-card glass"><div class="stat-label">${l}</div><div class="stat-value">${v}</div><div class="stat-note">${n}</div></article>`).join(''); $('#distributionTitle').textContent=state.objective||'Decision outlook'; $('#simCountTag').textContent=Number(state.simScale).toLocaleString()+' runs'; const max=Math.max(...r.bins); $('#chartBars').innerHTML=r.bins.map(h=>`<div class="bar" style="height:${18+190*(h/max)}px"></div>`).join(''); }
+function renderMitigation(){const r=state.result; $('#mitigationList').innerHTML=r.risk.map(([a,b],idx)=>`<div class="list-item"><div class="bullet">${idx+1}</div><div><strong>${a}</strong><p>${b}</p></div></div>`).join('')}
+function renderKpis(){const rows=state.result.kpis; $('#kpiTable').innerHTML=`<div class="kpi-row head"><div>KPI</div><div>Best</div><div>Worst</div><div>Warning</div></div>`+rows.map(k=>`<div class="kpi-row"><strong>${k.name}</strong><span>${k.best}</span><span>${k.worst}</span><span>${k.warning}</span></div>`).join('')}
+function strategyInsights(){const s=(state.strategy||'').trim(); const list=$('#strategyReviewList'); const review=$('#strategyReview'); const tactics=$('#tacticsList'); if(!s){ review.textContent='Add a strategy and the agent will check how aligned it is with the key KPI drivers.'; list.innerHTML=''; tactics.innerHTML=`<div class="list-item"><div class="bullet">Ops</div><div><strong>Operations</strong><p>Reduce overtime leakage, improve schedule adherence, and track throughput variance.</p></div></div><div class="list-item"><div class="bullet">Sales</div><div><strong>Commercial</strong><p>Focus on high-margin accounts and improve conversion quality.</p></div></div><div class="list-item"><div class="bullet">Fin</div><div><strong>Finance</strong><p>Set guardrails for margin, working capital, and cash buffers.</p></div></div>`; return; }
+ const t=s.toLowerCase(); let score='Strong fit'; let reviewText='The strategy aligns well with the main drivers of outcome variability.'; const items=[]; const tacticItems=[];
+ if(t.includes('price')) items.push(['Pricing leverage','Positive impact on EBITDA and cash flow, but sensitive to demand elasticity.']);
+ if(t.includes('marketing')||t.includes('sales')) items.push(['Growth lever','Supports revenue upside, but requires lead quality and sales capacity.']);
+ if(t.includes('cost')||t.includes('efficiency')||t.includes('overtime')) items.push(['Efficiency lever','Improves margin resilience and downside protection.']);
+ if(t.includes('hiring')||t.includes('capex')||t.includes('expansion')) {score='Mixed fit'; reviewText='The strategy can create upside, but it adds execution load and short-term cost pressure.'; items.push(['Execution risk','Watch ramp-up time, overhead, and cash conversion.']);}
+ if(items.length===0) items.push(['Strategy clarity','The direction is promising, but the tactic needs sharper KPI ownership and time horizon.']);
+ if(t.includes('price')) tacticItems.push(['Commercial','Define price corridors by segment and equip account managers with exception rules.']);
+ if(t.includes('efficiency')||t.includes('cost')||t.includes('overtime')) tacticItems.push(['Operations','Launch a 30-day cost and throughput sprint with downtime and overtime caps.']);
+ if(t.includes('marketing')||t.includes('sales')) tacticItems.push(['Growth','Reallocate spend toward higher-conversion channels and weekly funnel reviews.']);
+ if(tacticItems.length<3) tacticItems.push(['Finance','Create a weekly warning dashboard for margin, cash, and execution variance.']);
+ if(tacticItems.length<3) tacticItems.push(['CEO office','Review progress bi-weekly against one primary KPI and two guardrails.']);
+ review.textContent=`${score}. ${reviewText}`;
+ list.innerHTML=items.map((x,i)=>`<div class="list-item"><div class="bullet">${i+1}</div><div><strong>${x[0]}</strong><p>${x[1]}</p></div></div>`).join('');
+ tactics.innerHTML=tacticItems.map((x,i)=>`<div class="list-item"><div class="bullet">${x[0].slice(0,3)}</div><div><strong>${x[0]}</strong><p>${x[1]}</p></div></div>`).join('');
+}
+function renderDecide(){ renderStats(); renderMitigation(); renderKpis(); strategyInsights(); const methodTag=$('#activeMethodTag'); if(methodTag) methodTag.textContent='Selected: '+(methods[state.method]?.name||'Legacy demo'); const t=$('#decideScaleTag'); if(t) t.textContent=(state.simScale===1000?'1K':state.simScale===10000?'10K':'100K')+' default'; }
+function renderHistory(){const grid=$('#historyGrid'); const empty=$('#historyEmpty'); if(!state.history.length){grid.innerHTML='';empty.classList.remove('hidden');return} empty.classList.add('hidden'); grid.innerHTML=state.history.map(item=>`<article class="history-card glass"><div class="tag">${escapeHtml(item.date)}</div><h3>${escapeHtml(item.title)}</h3><p>P(target) ${item.success}% · Expected ${item.p50}% · ${item.risk} risk</p><div class="history-meta"><button class="link-btn" data-load="${item.id}">Open</button><button class="link-btn" data-delete="${item.id}">Delete</button></div></article>`).join('')}
+function renderSettings(){ $('#companyInput').value=state.company; $('#industryInput').value=state.industry; $('#internetPermission').value=state.permissions.internet; $('#dbPermission').value=state.permissions.db; $('#providerInput').value=state.provider; $$('#settingsScale button').forEach(b=>b.classList.toggle('active',Number(b.dataset.scale)===state.simScale)); }
+function upsertHistory(){const title=(state.objective||'New decision').trim(); const entry={id:'h'+Date.now(),title,date:'Just now',success:Math.round(state.result.success),p50:+state.result.p50.toFixed(1),risk:state.result.p10<10?'High':state.result.p10<15?'Medium':'Low',method:state.method}; state.history=[entry,...state.history.filter(x=>x.title!==entry.title)].slice(0,9); save(); renderLatest(); }
+function startDecision(){ const val=$('#objectiveInput').value.trim(); state.objective=val||'Can we grow EBITDA 20% next year?'; state.method=null; state.result=null; save(); navigate('method'); }
+function runFlowToDecide(){ if(!state.method){navigate('method');return;} simulate(); upsertHistory(); renderLatest(); navigate('decide'); }
+function setSource(source){ state.source=source; save(); renderDataPage(); }
+function initEvents(){
+  $$('#startDecisionBtn,#newProjectBtn').forEach(el=>el.addEventListener('click',startDecision));
+  $('#methodBackBtn').addEventListener('click',()=>navigate('home'));
+  $('#methodContinueBtn').addEventListener('click',()=>{if(state.method)navigate('data')});
+  $$('[data-select-method]').forEach(btn=>btn.addEventListener('click',()=>selectMethod(btn.dataset.selectMethod)));
+  $('#backHomeBtn').addEventListener('click',()=>navigate('method'));
+  $('#useDataBtn').addEventListener('click',runFlowToDecide);
+  $$('.source-card').forEach(card=>{card.addEventListener('click',()=>setSource(card.dataset.source)); card.querySelector('button').addEventListener('click',e=>{e.stopPropagation();setSource(card.dataset.source);});});
+  $$('#settingsScale button').forEach(btn=>btn.addEventListener('click',()=>{state.simScale=Number(btn.dataset.scale); state.result=null; save(); renderSettings(); renderDecide();}));
+  $('#rerunBtn').addEventListener('click',()=>{state.result=null; simulate(); upsertHistory(); renderDecide(); renderHistory();});
+  $('#reviewStrategyBtn').addEventListener('click',()=>{state.strategy=$('#strategyInput').value.trim(); save(); if(!state.result) simulate(); strategyInsights(); upsertHistory(); renderLatest(); renderHistory();});
+  $('#companyInput').addEventListener('input',e=>{state.company=e.target.value; save()});
+  $('#industryInput').addEventListener('input',e=>{state.industry=e.target.value; save()});
+  $('#internetPermission').addEventListener('change',e=>{state.permissions.internet=e.target.value; save()});
+  $('#dbPermission').addEventListener('change',e=>{state.permissions.db=e.target.value; save()});
+  $('#providerInput').addEventListener('change',e=>{state.provider=e.target.value; save()});
+  $$('[data-nav]').forEach(btn=>btn.addEventListener('click',()=>navigate(btn.dataset.nav)));
+  document.addEventListener('click',e=>{const load=e.target.closest('[data-load]'); if(load){const item=state.history.find(x=>x.id===load.dataset.load); if(item){state.objective=item.title; state.method=item.method||null; $('#objectiveInput').value=item.title; state.result=null; navigate('decide');}} const del=e.target.closest('[data-delete]'); if(del){state.history=state.history.filter(x=>x.id!==del.dataset.delete); save(); renderHistory(); renderLatest();}});
+}
+
+function renderSideRecents(){
+  const n=$('#sideHistoryCount');if(n)n.textContent=String(state.history.length);
+  const wrap=$('#sideRecents');if(!wrap)return;
+  wrap.innerHTML=state.history.slice(0,3).map(item=>`<button data-load="${escapeHtml(item.id)}" title="Open ${escapeHtml(item.title)}"><span class="side-recent-dot"></span><span class="recent-copy"><strong>${escapeHtml(item.title)}</strong><small>${escapeHtml(item.date)}</small></span></button>`).join('') || '<div style="font-size:11px;color:#8caabd;padding:10px">No decisions yet</div>';
+}
+function closeMobileSidebar(){
+  $('#sidebar').classList.remove('mobile-open');
+  $('#sidebarBackdrop').classList.remove('visible');
+  $('#openSidebarBtn').setAttribute('aria-expanded','false');
+  document.body.style.overflow='';
+}
+function openMobileSidebar(){
+  $('#sidebar').classList.add('mobile-open');
+  $('#sidebarBackdrop').classList.add('visible');
+  $('#openSidebarBtn').setAttribute('aria-expanded','true');
+  document.body.style.overflow='hidden';
+}
+function initSidebar(){
+  const app=$('.app');
+  $('#openSidebarBtn').addEventListener('click',openMobileSidebar);
+  $('#closeSidebarBtn').addEventListener('click',closeMobileSidebar);
+  $('#sidebarBackdrop').addEventListener('click',closeMobileSidebar);
+  $('#sidebarCollapseBtn').addEventListener('click',()=>{
+    if(matchMedia('(max-width: 1060px)').matches)return;
+    app.classList.toggle('sidebar-collapsed');
+    const collapsed=app.classList.contains('sidebar-collapsed');
+    $('#sidebarCollapseBtn').setAttribute('aria-label',collapsed?'Expand sidebar':'Collapse sidebar');
+    $('#sidebarCollapseBtn').title=collapsed?'Expand sidebar':'Collapse sidebar';
+    try{localStorage.setItem('simulation_sidebar_collapsed',collapsed?'1':'0')}catch(e){}
+  });
+  try{if(localStorage.getItem('simulation_sidebar_collapsed')==='1')app.classList.add('sidebar-collapsed')}catch(e){}
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileSidebar()});
+  window.addEventListener('resize',()=>{if(innerWidth>760)closeMobileSidebar()});
+}
+
+function initHero(){ const headlines=['The future isn’t a guess.','What do you want to foresee?','See the move before you make it.']; let idx=0; setInterval(()=>{idx=(idx+1)%headlines.length; $('#heroHeadline').textContent=headlines[idx]}, 4200)}
+function orbit(){
+  const canvas=$('#orbitCanvas'); if(!canvas) return; const ctx=canvas.getContext('2d'); const pts=[]; const center={x:canvas.width/2,y:canvas.height/2}; const mouse={x:center.x,y:center.y,active:false}; const rings=[170,232,292]; rings.forEach((r,ri)=>{const count=ri===0?18:ri===1?26:34; for(let i=0;i<count;i++){const a=(Math.PI*2/count)*i; pts.push({ring:r,angle:a,baseSize:ri===0?8.2:ri===1?7.3:6.5,phase:Math.random()*Math.PI*2});}});
+  function draw(t){ctx.clearRect(0,0,canvas.width,canvas.height); ctx.save(); ctx.translate(center.x,center.y); for(const p of pts){ const wob=Math.sin(t*.0012+p.phase)*4; const x=Math.cos(p.angle)*(p.ring+wob); const y=Math.sin(p.angle)*(p.ring+wob*.5); const wx=mouse.active?(mouse.x-center.x)*.04*(1-p.ring/360):0; const wy=mouse.active?(mouse.y-center.y)*.04*(1-p.ring/360):0; const dx=x+wx; const dy=y+wy; const dist=Math.hypot(mouse.x-(dx+center.x),mouse.y-(dy+center.y)); const infl=Math.max(0,1-dist/140); const size=p.baseSize + infl*3.4; const alpha=.2 + (1-p.ring/340)*.38 + infl*.24; const grad=ctx.createRadialGradient(dx-1.2,dy-1.2,0,dx,dy,size*2.5); grad.addColorStop(0,`rgba(191,243,255,${Math.min(.95,alpha+.28)})`); grad.addColorStop(.65,`rgba(115,214,255,${alpha})`); grad.addColorStop(1,'rgba(86,187,255,0)'); ctx.fillStyle=grad; ctx.beginPath(); ctx.arc(dx,dy,size*2.35,0,Math.PI*2); ctx.fill(); ctx.fillStyle=`rgba(133,225,255,${Math.min(1,alpha+.2)})`; ctx.beginPath(); ctx.arc(dx,dy,size,0,Math.PI*2); ctx.fill(); }
+    ctx.restore(); requestAnimationFrame(draw);
+  }
+  canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect(); mouse.x=(e.clientX-r.left)*(canvas.width/r.width); mouse.y=(e.clientY-r.top)*(canvas.height/r.height); mouse.active=true;});
+  canvas.addEventListener('mouseleave',()=>{mouse.active=false; mouse.x=center.x; mouse.y=center.y});
+  requestAnimationFrame(draw);
+}
+function boot(){ initSidebar(); renderLatest(); renderHistory(); renderSettings(); renderDataPage(); if(state.objective) $('#objectiveInput').value=state.objective; if(state.strategy) $('#strategyInput').value=state.strategy; initEvents(); initHero(); orbit(); navigate(state.page||'home'); }
+boot();
+</script>
+</body>
+</html>
