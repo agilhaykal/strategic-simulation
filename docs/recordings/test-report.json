@@ -1,0 +1,83 @@
+{
+  "name": "SimplifySimulation recorded live browser flow",
+  "started_at": "2026-10-18T15:21:01.456Z",
+  "data": "Fictional capacity estimates only; separate application database.",
+  "agent": "Real OpenRouter; no response stubbing",
+  "steps": [
+    {
+      "name": "Open the real frontend and create a synthetic decision",
+      "start_seconds": 0.6,
+      "status": "passed"
+    },
+    {
+      "name": "Request clarification from the real AI agent",
+      "start_seconds": 2.7,
+      "status": "passed"
+    },
+    {
+      "name": "Confirm the decision context",
+      "start_seconds": 26.6,
+      "status": "passed"
+    },
+    {
+      "name": "Upload two synthetic CSVs and verify PII exclusion",
+      "start_seconds": 28,
+      "status": "passed"
+    },
+    {
+      "name": "Discuss the CSV with the real agent",
+      "start_seconds": 29.4,
+      "status": "passed"
+    },
+    {
+      "name": "Map only the needed numeric column and approve its source",
+      "start_seconds": 49.9,
+      "status": "passed"
+    },
+    {
+      "name": "Exclude unused evidence and document explicit assumptions",
+      "start_seconds": 53.6,
+      "status": "passed"
+    },
+    {
+      "name": "Approve the combined evidence snapshot",
+      "start_seconds": 55.1,
+      "status": "passed"
+    },
+    {
+      "name": "Request a source-grounded model from the real agent",
+      "start_seconds": 59,
+      "status": "passed"
+    },
+    {
+      "name": "Approve the model and complete 10,000 paired simulations",
+      "start_seconds": 104.7,
+      "status": "passed"
+    },
+    {
+      "name": "Record a fictional decision and verify persistence after reload",
+      "start_seconds": 107.9,
+      "status": "passed"
+    },
+    {
+      "name": "Run a real Tavily search without changing approved evidence",
+      "start_seconds": 110.1,
+      "status": "passed"
+    },
+    {
+      "name": "Check mobile layout",
+      "start_seconds": 113.8,
+      "status": "passed"
+    }
+  ],
+  "browser_errors": [],
+  "project_id": "98121598-39be-4766-9344-691a8608ecf8",
+  "pii_column_excluded": true,
+  "persistence_verified": true,
+  "real_search_results": 5,
+  "mobile_horizontal_overflow": false,
+  "status": "passed",
+  "duration_seconds": 115,
+  "engine_iterations_verified": 10000,
+  "completed_run_verified": true
+}

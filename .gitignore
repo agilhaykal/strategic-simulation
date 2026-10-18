@@ -8,3 +8,7 @@ __pycache__/
 
 .env.*
 !.env.example
+
+# Keep the compatible MP4/report; raw Playwright video is generated locally.
+docs/recordings/.raw/
+docs/recordings/*.webm
