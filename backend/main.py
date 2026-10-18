@@ -25,7 +25,7 @@ def init():
             p=json.loads(row['body'])
             if p.get('status') in ('QUEUED','RUNNING'):
                 p['status']='FAILED'; p['error']='Worker interrupted; submit a new run.'; c.execute('UPDATE projects SET body=? WHERE id=?',(json.dumps(p),p['id']))
-init(); app=FastAPI(title='NORTH local API'); lock=threading.RLock()
+init(); app=FastAPI(title='SimplifySimulation local API'); lock=threading.RLock()
 @app.middleware('http')
 async def local_guard(request:Request,call_next):
     # Block cross-origin browser writes; service intentionally has no CORS wildcard.

@@ -2,7 +2,7 @@
 
 ## User journey
 
-1. Create a decision and enable sharing minimized context with OpenRouter. Start clarification or send an answer. Agent NORTH asks at most two questions per reply. Messages persist in the decision, including failed requests; retry uses the same request ID.
+1. Create a decision and enable sharing minimized context with OpenRouter. Start clarification or send an answer. Agent SimplifySimulation asks at most two questions per reply. Messages persist in the decision, including failed requests; retry uses the same request ID.
 2. Review/correct the context summary and confirm it. Changing the summary invalidates downstream approval; source discussions do not silently change confirmed context.
 3. Add multiple CSVs, internet pages and PostgreSQL sources in any combination. `Discuss with agent` scopes the same conversation to that source.
 4. Select columns, map numeric inputs, specify their units, definitions, observation periods and geography/population, and review deterministic aggregates. Supported filters: equality and numeric lower/upper bounds. Supported aggregation: mean, sum, min, max, last (source row order).

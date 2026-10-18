@@ -23,7 +23,7 @@ def official(host):return any(host==d or host.endswith('.'+d) for d in OFFICIAL)
 async def fetch_page(url):
     host=checked_url(url)
     async with httpx.AsyncClient(timeout=20,follow_redirects=False) as client:
-        async with client.stream('GET',url,headers={'User-Agent':'NORTH-Evidence/0.2','Accept':'text/html,text/plain'}) as r:
+        async with client.stream('GET',url,headers={'User-Agent':'SimplifySimulation-Evidence/0.2','Accept':'text/html,text/plain'}) as r:
             if r.status_code!=200:raise ValueError(f'Source returned HTTP {r.status_code}; redirects require adding the final HTTPS URL explicitly')
             if not any(t in r.headers.get('content-type','') for t in ('text/html','text/plain')):raise ValueError('Only HTML or plain text pages are supported; PDF extraction is not yet supported')
             raw=bytearray()

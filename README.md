@@ -1,4 +1,4 @@
-# NORTH — local decision intelligence
+# SimplifySimulation — local decision intelligence
 
 English decision chat → confirmed context → multiple CSV / internet / PostgreSQL sources → PII-minimized source discussions and mappings → source and combined-evidence approval → model review → paired Monte Carlo → decision and immutable history. See [the multi-source guide](docs/MULTISOURCE.md).
 
@@ -25,7 +25,7 @@ Docker alternative: `docker compose up --build`. Ports are bound to loopback. Da
 
 ## Use
 
-Start a decision, allow minimized context sharing, and use **Start clarification** or send a message to Agent NORTH. Confirm the context summary. Add multiple CSV files, approved internet URLs or read-only PostgreSQL sources; discuss each source in the same thread. Select and map only the relevant columns with units, definitions, observation periods and population. Review privacy/quality limitations, approve included source versions, and freeze the combined evidence. Then request and approve a model before running simulations. Source edits revoke affected approvals while old completed run snapshots are retained.
+Start a decision, allow minimized context sharing, and use **Start clarification** or send a message to Agent SimplifySimulation. Confirm the context summary. Add multiple CSV files, approved internet URLs or read-only PostgreSQL sources; discuss each source in the same thread. Select and map only the relevant columns with units, definitions, observation periods and population. Review privacy/quality limitations, approve included source versions, and freeze the combined evidence. Then request and approve a model before running simulations. Source edits revoke affected approvals while old completed run snapshots are retained.
 
 Tavily basic search requires `TAVILY_API_KEY` or an encrypted Settings key. Use a free-plan key for the POC and monitor account quota; unlimited free usage is not promised. Configure PostgreSQL through Settings or `NORTH_POSTGRES_DSN`. Raw CSV/query rows remain encrypted locally and are never put in the agent prompt. Page excerpts require manual privacy review before AI access. Credentials are backend-only. See [MULTISOURCE.md](docs/MULTISOURCE.md) for controls, API, and limitations.
 

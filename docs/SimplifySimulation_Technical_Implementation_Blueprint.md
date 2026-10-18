@@ -1,14 +1,14 @@
 ---
-title: NORTH — Technical Implementation Blueprint
+title: SimplifySimulation — Technical Implementation Blueprint
 subtitle: From interactive HTML prototype to a secure, auditable strategy simulation SaaS
 version: 1.0 (architecture baseline)
 date: 2026-10-15
 status: Proposed design — not yet implemented
 ---
 
-# NORTH — Technical Implementation Blueprint
+# SimplifySimulation — Technical Implementation Blueprint
 
-**Product:** NORTH / AI-powered Strategic Decision Intelligence  
+**Product:** SimplifySimulation / AI-powered Strategic Decision Intelligence\
 **Audience:** CTO, Tech Lead, AI Engineer, Backend, Frontend, Data, DevOps, QA, Security  
 **Baseline:** `strategy-simulation-prototype.html` (latest sidebar + blue glassmorphism design) and `HTMA_3rd_Ch6-2.xlsx` reference work  
 **Status:** Engineering design proposal. All source code, infrastructure, permissions, and integrations described below must still be implemented and tested.
@@ -33,7 +33,7 @@ status: Proposed design — not yet implemented
 
 ### 1.1 Outcome to build
 
-A signed-in executive writes a strategic question, such as: “Can we increase EBITDA by 20% next year through pricing and operational efficiency?” NORTH transforms it into a reviewable decision model, obtains approved evidence, runs scenarios in a validated engine, and returns a concise, defensible decision brief. Executives can alter strategic levers, compare baseline versus proposed strategy, review KPI ranges and risk mitigation, approve decisions, and retrieve prior versions.
+A signed-in executive writes a strategic question, such as: “Can we increase EBITDA by 20% next year through pricing and operational efficiency?” SimplifySimulation transforms it into a reviewable decision model, obtains approved evidence, runs scenarios in a validated engine, and returns a concise, defensible decision brief. Executives can alter strategic levers, compare baseline versus proposed strategy, review KPI ranges and risk mitigation, approve decisions, and retrieve prior versions.
 
 ### 1.2 Prototype-to-production gap
 
@@ -476,7 +476,7 @@ Soft-delete projects for configurable grace period; schedule hard deletion acros
 ### 12.1 Recommended repository
 
 ```text
-north/
+SimplifySimulation/
   apps/web/                     # Next.js app
   services/api/                 # FastAPI routes/auth/domain
   services/worker/              # queue consumers, simulation
@@ -611,7 +611,7 @@ A production beta is ready only if all of the following are demonstrably true:
 
 **Project inputs reviewed:**
 
-- `strategy-simulation-prototype.html`: latest NORTH prototype (sidebar layout, `page-home`, `page-data`, `page-decide`, `page-history`, `page-settings`, orbital canvas, browser demo simulation, local history).
+- `strategy-simulation-prototype.html`: latest SimplifySimulation prototype (sidebar layout, `page-home`, `page-data`, `page-decide`, `page-history`, `page-settings`, orbital canvas, browser demo simulation, local history).
 - `HTMA_Chapter6_Reverse_Engineering.md` and `htma_simulation_reference.py`: previously prepared reverse engineering of seven Excel methods; used only as numerical reference, not as automatically production-certified source.
 - `HTMA_3rd_Ch6-2.xlsx`: uploaded workbook for method provenance.
 
