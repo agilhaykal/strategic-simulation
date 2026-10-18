@@ -45,9 +45,10 @@ async function main() {
       await page.getByRole('heading',{name:'Decision conversation',exact:true}).waitFor();
     });
     await step('Request clarification from the real AI agent',async()=>{
-      await page.getByRole('checkbox',{name:/Allow sending this context/}).check();
+      await page.getByRole('checkbox',{name:/Allow the assistant to process this context/}).check();
       await request(()=>page.getByRole('button',{name:'Start clarification',exact:true}).click(),'/messages');
       await page.locator('.message.assistant').first().waitFor();
+      assert.doesNotMatch(await page.locator('main').innerText(), /OpenRouter|Tavily|NumPy|FastAPI|PostgreSQL/i);
     });
     await step('Confirm the decision context',async()=>{
       await page.getByLabel('Review or correct the summary').fill('Fictional manufacturing capacity decision, not a business forecast. Company-wide scope, next 12 months, target served demand >=95 units/year. Current capacity fixed at 90 units/year; proposed capacity fixed at 110 units/year. Demand uncertainty will use our synthetic CSV. Independent sampling.');
@@ -126,7 +127,7 @@ async function main() {
     await step('Run a real Tavily search without changing approved evidence',async()=>{
       await page.getByRole('button',{name:'Explore internet',exact:true}).click();
       await page.getByLabel('Search for evidence').fill('site:bi.go.id BI-Rate policy rate 2026');
-      await page.getByRole('checkbox',{name:/Allow this search query/}).check();
+      await page.getByRole('checkbox',{name:/Allow external internet research/}).check();
       const p=await request(()=>page.getByRole('button',{name:'Search internet',exact:true}).click(),'/internet-search');
       assert.ok(p.search_results.results.length>0);
       await page.getByRole('button',{name:'Review this URL'}).first().waitFor();

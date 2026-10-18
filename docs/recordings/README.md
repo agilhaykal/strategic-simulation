@@ -6,7 +6,7 @@ This directory contains a silent Playwright screen recording of the real Simplif
 - [Machine-readable step results](test-report.json)
 - [Reusable Playwright script](../../tests/browser/record-flow.cjs)
 
-The completed run passed 13 browser steps in 115 seconds, with zero JavaScript errors and no mobile horizontal overflow. The simulation result was independently checked as COMPLETED with 10,000 iterations. An initial harness attempt stopped on an overly strict prefilled-textarea label selector; that selector was corrected before this successful recording.
+The latest run passed 13 browser steps in 70 seconds, with zero JavaScript errors and no mobile horizontal overflow. The simulation result was independently checked as COMPLETED with 10,000 iterations. The conversation check also rejects infrastructure vendor names in the primary decision screen.
 
 The recording covers decision intake, real agent clarification, context confirmation, multiple CSVs, identifier exclusion, source-scoped discussion, mapping/approval, combined evidence, real model proposal, 10K simulations, recorded decision/reload, Tavily search and mobile layout. It does not test a real company's database, production tenant isolation or forecasting accuracy.
 

@@ -66,3 +66,5 @@ Agent orchestration uses persisted conversation/API stages and structured OpenRo
 ## OpenRouter environment key
 
 The backend reads `OPENROUTER_API_KEY` as a fallback when no key is saved in Settings. Restart the backend after adding or changing its process environment. Settings reports the active source without exposing the value. A key explicitly saved in Settings takes precedence; removing it restores the environment fallback. Environment keys are not copied into SQLite. Docker Compose forwards this variable to the API container; recreate that container after changing it. Never put credentials in Git-tracked files or send them in chat.
+
+Self-hosted performance monitoring setup and privacy scope: [docs/MONITORING.md](docs/MONITORING.md).
