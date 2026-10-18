@@ -191,3 +191,33 @@ def test_delete_project_removes_encrypted_source_rows(client):
     assert 'person@example.com' not in path.read_bytes().decode()
     assert c.delete(f'/api/projects/{p["id"]}').status_code==200
     assert not path.exists()
+
+def test_html_article_inside_server_form_is_preserved(monkeypatch):
+    import asyncio
+    from backend import connectors
+    article='The policy rate is 5.75 percent for September 2026. This is published macroeconomic evidence, not a customer count.'
+    html=f'<html><head><title>Policy report</title></head><body><form id="aspnetForm"><nav>Unrelated navigation</nav><input name="hidden-token" value="secret-value"><article>{article}</article><button>Submit form</button></form></body></html>'.encode()
+    class Response:
+        status_code=200
+        headers={'content-type':'text/html'}
+        async def __aenter__(self):return self
+        async def __aexit__(self,*args):pass
+        async def aiter_bytes(self):yield html
+    class Client:
+        def __init__(self,**kw):pass
+        async def __aenter__(self):return self
+        async def __aexit__(self,*args):pass
+        def stream(self,*args,**kw):return Response()
+    monkeypatch.setattr(connectors.httpx,'AsyncClient',Client)
+    result=asyncio.run(connectors.fetch_page('https://www.bi.go.id/policy'))
+    assert article in result['excerpt']
+    assert 'secret-value' not in result['excerpt']
+    assert 'Unrelated navigation' not in result['excerpt']
+
+def test_quoted_numbers_respect_declared_decimal_convention():
+    from backend.evidence import quoted_numbers
+    assert 5.75 in quoted_numbers('BI-Rate sebesar 5 ,75%, pada Agustus 2026.','decimal_comma')
+    assert 575 not in quoted_numbers('BI-Rate sebesar 5 ,75%, pada Agustus 2026.','decimal_comma')
+    assert 600000 in quoted_numbers('Jumlah nasabah 600.000 orang.','decimal_comma')
+    assert 1234.56 in quoted_numbers('Balance 1,234.56 USD.','decimal_dot')
+    with pytest.raises(ValueError):quoted_numbers('5,75%','guess')

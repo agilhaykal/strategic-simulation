@@ -148,3 +148,18 @@ def agent_sources(p,focus_source_id=None):
             result[-1]['privacy_status']='Text withheld until user privacy review'
         result[-1]['columns']={k:(v if selected else {field:v[field] for field in ('type','missing','numeric_count','text_count') if field in v}) for k,v in s.get('columns',{}).items() if not v.get('restricted') and (not selected or k in selected)}
     return result
+
+
+def quoted_numbers(quote,number_format):
+    """Parse only numeric tokens present in the quote using an explicit source locale."""
+    if number_format not in ('decimal_comma','decimal_dot'):raise ValueError('Specify the source number format')
+    compact=re.sub(r'(?<=\d)\s+(?=[.,])|(?<=[.,])\s+(?=\d)','',quote)
+    tokens=re.findall(r'(?<![\w.,])[+-]?\d+(?:[.,]\d+)*(?![\w.,])',compact)
+    values=[]
+    for token in tokens:
+        normalized=token.replace('.','').replace(',','.') if number_format=='decimal_comma' else token.replace(',','')
+        try:
+            value=float(normalized)
+            if math.isfinite(value):values.append(value)
+        except ValueError:continue
+    return values

@@ -26,7 +26,7 @@ Search results are discovery aids, never automatically approved evidence. Add a 
 
 Only HTML/plain text pages up to 2 MB are supported. Redirects require adding the final URL explicitly. Non-HTTPS URLs, embedded credentials, suspicious query identifiers, private/reserved destinations and custom ports are rejected. Curated official hosts work through the environment egress proxy; other domains additionally require public DNS resolution. Network access settings may need domain-specific additions. This local control is not a substitute for a production outbound firewall.
 
-Before any page text is sent to the agent, the user must select/review a contiguous excerpt without personal information. Unreviewed text is withheld. The agent can propose observations with exact supporting quotes; the backend checks the quote is present and the number appears in it. This lexical check does not establish the correctness of statistical interpretation, unit scaling, period or source methodology: those remain review obligations. Accepting extraction is separate from approving source quality.
+Before any page text is sent to the agent, the user must select/review a contiguous excerpt without personal information. Unreviewed text is withheld. The agent can propose observations with exact supporting quotes; the backend checks the quote is present and the number appears in it under an explicitly declared decimal convention (decimal comma or decimal point). This lexical check does not establish the correctness of statistical interpretation, unit scaling, period or source methodology: those remain review obligations. Accepting extraction is separate from approving source quality.
 
 ## PostgreSQL
 
@@ -71,3 +71,9 @@ NORTH_TEST_POSTGRES_DSN=postgresql://postgres@127.0.0.1:15432/postgres .venv/bin
 ```
 
 Unit tests remove injected provider bindings and use an isolated temporary application database; they do not consume real provider credits. Live browser validation uses clearly labeled synthetic decisions, never fabricated real-market evidence.
+
+### Live internet verification (2026-10-18)
+
+A real Tavily basic search through the application returned five BI source pages. A retrieved Bank Indonesia page was parsed and discussed with the real OpenRouter agent after excerpt privacy review. The backend blocked the source discussion before that review, then validated a quoted BI-Rate observation using the declared Indonesian decimal-comma convention. The observation belongs to the dated source meeting and is not a claim that it is the latest available rate. Evidence remained unapproved and no simulation was submitted. Desktop/mobile browser checks rendered the saved search results and source without JavaScript errors or horizontal overflow.
+
+This test caught and fixed two extraction issues: ASP.NET/SharePoint pages may wrap article text in a server-side form, and decimal commas must not be stripped as if they were thousands separators. Regression tests cover both cases.

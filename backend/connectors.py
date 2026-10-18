@@ -32,7 +32,9 @@ async def fetch_page(url):
                 if len(raw)>2_000_000:raise ValueError('Page exceeds 2 MB limit')
     soup=BeautifulSoup(bytes(raw),'html.parser')
     title=soup.title.get_text(' ',strip=True) if soup.title else host
-    for tag in soup(['script','style','nav','footer','header','form','noscript']):tag.decompose()
+    # SharePoint/ASP.NET often wraps the entire article in a server-side form.
+    # Remove interactive controls, not their potentially content-bearing ancestor.
+    for tag in soup(['script','style','nav','footer','header','input','button','select','textarea','noscript']):tag.decompose()
     text=scrub(soup.get_text(' ',strip=True))[:18000]
     if len(text)<40:raise ValueError('Page has insufficient readable content')
     return {'title':scrub(title)[:200],'excerpt':text,'trust':'official' if official(host) else 'unverified','host':host}
