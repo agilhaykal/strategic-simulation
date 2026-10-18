@@ -1,5 +1,4 @@
 import os, tempfile, time, copy
-os.environ['NORTH_DATA_DIR']=tempfile.mkdtemp()
 import pytest
 from fastapi.testclient import TestClient
 from backend.main import app
@@ -31,8 +30,19 @@ def test_local_workflow_and_persistence():
         assert c.post(f'/api/projects/{pid}/runs',json={'idempotency_key':'first'}).status_code==409
         assert c.post(f'/api/projects/{pid}/propose').status_code==409
         r=c.post(f'/api/projects/{pid}/evidence',files={'file':('demand.csv','demand\n90\n100\n110\n','text/csv')});assert r.status_code==200
-        assert r.json()['evidence']['columns']['demand']['mean']==100
-        assert c.post(f'/api/projects/{pid}/approve',json={'model':MODEL,'acknowledge':True}).status_code==200
+        assert r.json()['sources'][-1]['columns']['demand']['mean']==100
+        p=r.json();sid=p['sources'][-1]['id']
+        p=c.post(f'/api/projects/{pid}/context-confirmation',json={'revision':p['revision'],'summary':'Capacity decision over 12 months; target 95 units based on explicit estimates.'}).json()
+        p=c.put(f'/api/projects/{pid}/sources/{sid}/selection',json={'version':p['sources'][-1]['version'],'columns':['demand'],'mapping':{'demand':{'variable':'demand','unit':'units/year','definition':'Annual demand','period':'Next 12 months','geography':'Company'}},'aggregation':'mean'}).json()
+        p=c.post(f'/api/projects/{pid}/sources/{sid}/approve',json={'version':p['sources'][-1]['version'],'acknowledge':True}).json()
+        p=c.put(f'/api/projects/{pid}/estimates',json={'note':'Capacity is explicitly estimated as 90 units/year, proposed 110; demand uncertainty triangular 80,100,120.'}).json()
+        review=c.get(f'/api/projects/{pid}/evidence-review').json()
+        assert review['ready']
+        assert c.post(f'/api/projects/{pid}/evidence-snapshots',json={'revision':p['revision'],'review_hash':review['hash'],'acknowledge':True}).status_code==200
+        model=copy.deepcopy(MODEL)
+        model['variables'][0]['evidence_ref']=sid+':demand'
+        model['variables'][1]['evidence_ref']='estimate:capacity'
+        assert c.post(f'/api/projects/{pid}/approve',json={'model':model,'acknowledge':True}).status_code==200
         r=c.post(f'/api/projects/{pid}/runs',json={'idempotency_key':'first'});assert r.status_code==200
         for _ in range(100):
             p=c.get(f'/api/projects/{pid}').json()
@@ -66,14 +76,15 @@ def test_agent_contract_with_mocked_provider(monkeypatch):
             assert url=='https://openrouter.ai/api/v1/chat/completions'
             assert kwargs['json']['model']=='openai/gpt-6-luna'
             assert kwargs['json']['messages'][0]['role']=='system'
-            return main.httpx.Response(200,json={'choices':[{'message':{'content':main.json.dumps({'questions':[],'explanation':'Capacity model based on explicit estimates.','model':MODEL})}}]})
+            return main.httpx.Response(200,json={'choices':[{'message':{'content':main.json.dumps({'reply':'Please confirm the decision context.','context_summary':'Capacity decision based on explicit estimates.','context_ready':True,'questions':[],'data_requirements':[],'model':None})}}]})
     monkeypatch.setattr(main.httpx,'AsyncClient',Provider)
     with TestClient(app) as c:
         c.put('/api/settings',json={'model':'openai/gpt-6-luna','api_key':'test-not-real'})
         pid=c.post('/api/projects',json={'question':'Should we increase annual capacity?','context':'Use explicit estimates.'}).json()['id']
         r=c.post(f'/api/projects/{pid}/propose')
         assert r.status_code==200
-        assert r.json()['status']=='MODEL_PROPOSED'
+        assert r.json()['status']=='CLARIFYING'
+        assert r.json()['messages'][-1]['role']=='assistant'
         assert 'approved_at' not in r.json()
         assert c.post(f'/api/projects/{pid}/runs',json={'idempotency_key':'unsafe'}).status_code==409
         c.put('/api/settings',json={'model':'openai/gpt-6-luna','api_key':''})
